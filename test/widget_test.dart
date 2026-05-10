@@ -49,4 +49,31 @@ void main() {
     expect(find.text('Try it'), findsOneWidget);
     expect(find.byType(CustomPaint), findsWidgets);
   });
+
+  testWidgets('game board keeps usable size on a narrow mobile web viewport', (
+    WidgetTester tester,
+  ) async {
+    // スマホWebに近い狭い表示領域を作り、縦幅不足で盤面が押し潰されないことを確認する。
+    await tester.binding.setSurfaceSize(const Size(390, 640));
+    addTearDown(() => tester.binding.setSurfaceSize(null));
+
+    await tester.pumpWidget(const NineMensMorrisApp());
+
+    await tester.tap(find.text('Quick Play'));
+    await tester.pumpAndSettle();
+
+    // ゲーム画面には広告用のCustomPaintが増えてもよいので、最大サイズのCustomPaintを盤面として扱う。
+    final boardSize = tester
+        .widgetList<CustomPaint>(find.byType(CustomPaint))
+        .map((paint) => tester.getSize(find.byWidget(paint)))
+        .reduce((largest, current) {
+          return current.width * current.height > largest.width * largest.height
+              ? current
+              : largest;
+        });
+
+    // 390px幅のスマホでは、余白込みでも300px以上の正方形盤面を確保する。
+    expect(boardSize.width, greaterThanOrEqualTo(300));
+    expect(boardSize.height, greaterThanOrEqualTo(300));
+  });
 }

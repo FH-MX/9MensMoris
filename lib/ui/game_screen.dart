@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 
 import '../domain/ability_card_id.dart';
@@ -81,46 +83,65 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   Widget _buildNarrowLayout(PlayerState black, PlayerState white) {
-    return Column(
-      children: [
-        _PlayerPanel(
-          player: PlayerID.black,
-          piecesInHand: black.piecesInHand,
-          capturedPieces: black.capturedPieces,
-          cards: black.hand,
-          active: _state.currentPlayer == PlayerID.black,
-          canUseCards:
-              _state.currentPlayer == PlayerID.black &&
-              _state.turnPhase == TurnPhase.beforeAction &&
-              _isHumanTurn,
-          onCardSelected: _selectCard,
-        ),
-        Expanded(
-          child: _BoardSurface(
-            painter: _boardPainter(),
-            onNodeTap: _handleNodeTap,
-            onNodeHover: _handleNodeHover,
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // スマホWebではブラウザUIや広告で縦幅が小さくなるため、盤面は高さではなく幅を基準に確保する。
+        final boardSide = math.max(
+          0.0,
+          math.min(constraints.maxWidth - 24, 520.0),
+        );
+        return SingleChildScrollView(
+          child: ConstrainedBox(
+            // 内容が少ない端末では画面いっぱいに広げ、多い端末では自然に縦スクロールさせる。
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
+            child: Column(
+              children: [
+                _PlayerPanel(
+                  player: PlayerID.black,
+                  piecesInHand: black.piecesInHand,
+                  capturedPieces: black.capturedPieces,
+                  cards: black.hand,
+                  active: _state.currentPlayer == PlayerID.black,
+                  canUseCards:
+                      _state.currentPlayer == PlayerID.black &&
+                      _state.turnPhase == TurnPhase.beforeAction &&
+                      _isHumanTurn,
+                  onCardSelected: _selectCard,
+                ),
+                SizedBox(
+                  // 盤面を正方形で固定し、狭いWeb表示でも潰れて線やコマが消えないようにする。
+                  width: boardSide,
+                  height: boardSide,
+                  child: _BoardSurface(
+                    painter: _boardPainter(),
+                    onNodeTap: _handleNodeTap,
+                    onNodeHover: _handleNodeHover,
+                  ),
+                ),
+                _TurnControls(
+                  instruction: _instruction(),
+                  canContinue:
+                      _state.turnPhase == TurnPhase.beforeAction &&
+                      _isHumanTurn,
+                  onContinue: () => _apply(const SkipCardAction()),
+                ),
+                _PlayerPanel(
+                  player: PlayerID.white,
+                  piecesInHand: white.piecesInHand,
+                  capturedPieces: white.capturedPieces,
+                  cards: white.hand,
+                  active: _state.currentPlayer == PlayerID.white,
+                  canUseCards:
+                      _state.currentPlayer == PlayerID.white &&
+                      _state.turnPhase == TurnPhase.beforeAction &&
+                      _isHumanTurn,
+                  onCardSelected: _selectCard,
+                ),
+              ],
+            ),
           ),
-        ),
-        _TurnControls(
-          instruction: _instruction(),
-          canContinue:
-              _state.turnPhase == TurnPhase.beforeAction && _isHumanTurn,
-          onContinue: () => _apply(const SkipCardAction()),
-        ),
-        _PlayerPanel(
-          player: PlayerID.white,
-          piecesInHand: white.piecesInHand,
-          capturedPieces: white.capturedPieces,
-          cards: white.hand,
-          active: _state.currentPlayer == PlayerID.white,
-          canUseCards:
-              _state.currentPlayer == PlayerID.white &&
-              _state.turnPhase == TurnPhase.beforeAction &&
-              _isHumanTurn,
-          onCardSelected: _selectCard,
-        ),
-      ],
+        );
+      },
     );
   }
 
