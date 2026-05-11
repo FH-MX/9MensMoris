@@ -75,6 +75,7 @@ class _TutorialScreenState extends State<TutorialScreen> {
               canUseCards:
                   _tutorial.phase != TutorialPhase.completed &&
                   _tutorial.phase != TutorialPhase.showingExplanation,
+              selectedCard: _selectedCard,
               onCardSelected: _selectCard,
               primaryLabel: _primaryButtonLabel(),
               onPrimaryPressed: _handlePrimaryButton,
@@ -483,6 +484,7 @@ class _TutorialBoard extends StatelessWidget {
 class _TutorialControls extends StatelessWidget {
   final List<AbilityCardID> cards;
   final bool canUseCards;
+  final AbilityCardID? selectedCard;
   final ValueChanged<AbilityCardID> onCardSelected;
   final String primaryLabel;
   final VoidCallback onPrimaryPressed;
@@ -491,6 +493,7 @@ class _TutorialControls extends StatelessWidget {
   const _TutorialControls({
     required this.cards,
     required this.canUseCards,
+    required this.selectedCard,
     required this.onCardSelected,
     required this.primaryLabel,
     required this.onPrimaryPressed,
@@ -509,6 +512,7 @@ class _TutorialControls extends StatelessWidget {
             CardHandView(
               cards: cards,
               enabled: canUseCards,
+              selectedCard: selectedCard,
               onCardSelected: onCardSelected,
             ),
           if (showPrimaryButton) ...[

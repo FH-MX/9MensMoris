@@ -106,6 +106,9 @@ class _GameScreenState extends State<GameScreen> {
                       _state.currentPlayer == PlayerID.black &&
                       _state.turnPhase == TurnPhase.beforeAction &&
                       _isHumanTurn,
+                  selectedCard: _state.currentPlayer == PlayerID.black
+                      ? _selectedCard
+                      : null,
                   onCardSelected: _selectCard,
                 ),
                 SizedBox(
@@ -135,6 +138,9 @@ class _GameScreenState extends State<GameScreen> {
                       _state.currentPlayer == PlayerID.white &&
                       _state.turnPhase == TurnPhase.beforeAction &&
                       _isHumanTurn,
+                  selectedCard: _state.currentPlayer == PlayerID.white
+                      ? _selectedCard
+                      : null,
                   onCardSelected: _selectCard,
                 ),
               ],
@@ -162,6 +168,9 @@ class _GameScreenState extends State<GameScreen> {
                     _state.currentPlayer == PlayerID.black &&
                     _state.turnPhase == TurnPhase.beforeAction &&
                     _isHumanTurn,
+                selectedCard: _state.currentPlayer == PlayerID.black
+                    ? _selectedCard
+                    : null,
                 onCardSelected: _selectCard,
               ),
               const Spacer(),
@@ -175,6 +184,9 @@ class _GameScreenState extends State<GameScreen> {
                     _state.currentPlayer == PlayerID.white &&
                     _state.turnPhase == TurnPhase.beforeAction &&
                     _isHumanTurn,
+                selectedCard: _state.currentPlayer == PlayerID.white
+                    ? _selectedCard
+                    : null,
                 onCardSelected: _selectCard,
               ),
             ],
@@ -587,6 +599,7 @@ class _PlayerPanel extends StatelessWidget {
   final List<AbilityCardID> cards;
   final bool active;
   final bool canUseCards;
+  final AbilityCardID? selectedCard;
   final ValueChanged<AbilityCardID>? onCardSelected;
 
   const _PlayerPanel({
@@ -596,6 +609,7 @@ class _PlayerPanel extends StatelessWidget {
     required this.cards,
     required this.active,
     this.canUseCards = false,
+    this.selectedCard,
     this.onCardSelected,
   });
 
@@ -619,6 +633,7 @@ class _PlayerPanel extends StatelessWidget {
           CardHandView(
             cards: cards,
             enabled: canUseCards,
+            selectedCard: selectedCard,
             onCardSelected: onCardSelected,
           ),
         ],
