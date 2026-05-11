@@ -25,6 +25,31 @@
   </script>
 
   <style>
+    body {
+      margin: 0;
+      background: #faf7f2;
+    }
+
+    #app-loading {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      background: #faf7f2;
+      color: #2f2a22;
+      font-family: sans-serif;
+      text-align: center;
+    }
+
+    #app-loading strong {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 1.25rem;
+    }
+
     #game-info {
       max-width: 800px;
       margin: 0 auto;
@@ -34,8 +59,22 @@
     #game-info h1 { font-size: 1.4rem; margin-bottom: 8px; }
     #game-info p  { font-size: 0.95rem; line-height: 1.6; }
   </style>
+
+  <noscript>
+    <style>
+      #app-loading {
+        display: none;
+      }
+    </style>
+  </noscript>
 </head>
 <body>
+  <div id="app-loading">
+    <div>
+      <strong>9 Men's Morris</strong>
+      <span>ゲームを読み込んでいます...</span>
+    </div>
+  </div>
 
   <!-- ↓ Googleが読めるコンテンツをここに追加 -->
   <div id="game-info">
@@ -57,6 +96,14 @@
   </div>
   <!-- ↑ ここまでがGoogleに見えるコンテンツ -->
 
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      const loading = document.getElementById('app-loading');
+      if (loading) {
+        loading.remove();
+      }
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>
