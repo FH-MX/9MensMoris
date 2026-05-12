@@ -58,6 +58,15 @@
     }
     #game-info h1 { font-size: 1.4rem; margin-bottom: 8px; }
     #game-info p  { font-size: 0.95rem; line-height: 1.6; }
+
+    #top-ad {
+      width: 100%;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #faf7f2;
+    }
   </style>
 
   <noscript>
@@ -69,6 +78,23 @@
   </noscript>
 </head>
 <body>
+  <!-- ゲーム画面の上に表示するAdSenseバナー広告エリアです。 -->
+  <div id="top-ad">
+    <!-- AdSenseのバナー広告枠です。 -->
+    <!-- Flutterアプリの初期化前にHTMLとして配置して、Googleが広告枠を検出できるようにします。 -->
+    <ins class="adsbygoogle"
+         style="display:block;width:100%;max-width:970px"
+         data-ad-client="ca-pub-6888437414541905"
+         data-ad-slot="4868142895"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+  </div>
+
+  <!-- 上で配置したAdSense広告枠を初期化します。 -->
+  <script>
+    (adsbygoogle = window.adsbygoogle || []).push({});
+  </script>
+
   <div id="app-loading">
     <div>
       <strong>9 Men's Morris</strong>
