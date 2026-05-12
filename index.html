@@ -67,6 +67,24 @@
       justify-content: center;
       background: #faf7f2;
     }
+
+    #legal-links {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      z-index: 1000;
+      padding: 8px 10px;
+      border-radius: 6px;
+      background: rgba(250, 247, 242, 0.94);
+      font-family: sans-serif;
+      font-size: 0.8rem;
+      box-shadow: 0 2px 8px rgba(47, 42, 34, 0.16);
+    }
+
+    #legal-links a {
+      color: #2f2a22;
+      text-decoration: underline;
+    }
   </style>
 
   <noscript>
@@ -94,6 +112,14 @@
   <script>
     (adsbygoogle = window.adsbygoogle || []).push({});
   </script>
+
+  <!-- ゲーム中でも確認できる法務リンクです。 -->
+  <!-- AdSenseやユーザー向けに、プライバシーポリシーへ常に到達できる状態を保ちます。 -->
+  <nav id="legal-links" aria-label="法務リンク">
+    <a href="https://fh-mx.github.io/privacy.html">
+      プライバシーポリシー
+    </a>
+  </nav>
 
   <div id="app-loading">
     <div>
