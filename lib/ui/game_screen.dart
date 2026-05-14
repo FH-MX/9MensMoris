@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../domain/ability_card_id.dart';
 import '../domain/action.dart';
+import '../domain/board_topology.dart';
 import '../domain/card_target.dart';
 import '../domain/game_config.dart';
 import '../domain/game_phase.dart';
@@ -32,19 +33,44 @@ class GameScreen extends StatefulWidget {
   State<GameScreen> createState() => _GameScreenState();
 }
 
-class _GameScreenState extends State<GameScreen> {
+class _GameScreenState extends State<GameScreen>
+    with SingleTickerProviderStateMixin {
   late final GameEngine _engine;
+  late final AnimationController _effectController;
   late GameState _state;
   GameUiState _ui = const GameUiState();
   AbilityCardID? _selectedCard;
+  _BoardEffect? _boardEffect;
 
   @override
   void initState() {
     super.initState();
     // GameEngineにも同じ設定を渡し、UIと合法手判定のルールを一致させる。
     _engine = GameEngine(config: widget.config);
+    // ミル成立やカード使用を、盤面上の短いパルスとして描画するための共通タイマー。
+    _effectController =
+        AnimationController(
+            vsync: this,
+            duration: const Duration(milliseconds: 850),
+          )
+          ..addListener(() {
+            if (mounted) {
+              setState(() {});
+            }
+          })
+          ..addStatusListener((status) {
+            if (status == AnimationStatus.completed && mounted) {
+              setState(() => _boardEffect = null);
+            }
+          });
     // 初期手札はローカルルールから作る。初期版ではsameCardSetにより両者同一になる。
     _state = GameState.initial(cards: widget.config.enabledCards());
+  }
+
+  @override
+  void dispose() {
+    _effectController.dispose();
+    super.dispose();
   }
 
   @override
@@ -219,6 +245,10 @@ class _GameScreenState extends State<GameScreen> {
       selectedNode: _ui.selectedNode,
       hoveredNode: _ui.hoveredNode,
       blockedNodes: _state.blockedNodes,
+      millEffectLines: _boardEffect?.millLines ?? const [],
+      cardEffectNodes: _boardEffect?.cardNodes ?? const {},
+      cardEffectColor: _boardEffect?.cardColor,
+      effectProgress: _effectController.value,
     );
   }
 
@@ -404,12 +434,22 @@ class _GameScreenState extends State<GameScreen> {
   }
 
   void _apply(GameAction action) {
-    final next = _engine.apply(action: action, state: _state);
-    if (identical(next, _state)) {
+    _commitAction(action, showHumanCaptureTargets: true);
+  }
+
+  void _commitAction(
+    GameAction action, {
+    required bool showHumanCaptureTargets,
+  }) {
+    final before = _state;
+    final next = _engine.apply(action: action, state: before);
+    if (identical(next, before)) {
       return;
     }
+    final effect = _effectFor(action: action, before: before, after: next);
     final highlightedNodes =
-        next.turnPhase == TurnPhase.pendingCapture &&
+        showHumanCaptureTargets &&
+            next.turnPhase == TurnPhase.pendingCapture &&
             (widget.config.opponentType == OpponentType.localHuman ||
                 next.currentPlayer == PlayerID.white)
         ? _engine.removablePieces(
@@ -421,8 +461,83 @@ class _GameScreenState extends State<GameScreen> {
       _state = next;
       _ui = _freshUi(highlightedNodes: highlightedNodes);
       _selectedCard = null;
+      _boardEffect = effect.isEmpty ? null : effect;
     });
+    if (!effect.isEmpty) {
+      _effectController.forward(from: 0);
+    }
     _afterStateChanged();
+  }
+
+  _BoardEffect _effectFor({
+    required GameAction action,
+    required GameState before,
+    required GameState after,
+  }) {
+    final completedAt = _completedNodeFor(action);
+    final millEffectLines = completedAt == null
+        ? const <List<NodeID>>[]
+        : millLines
+              .where(
+                (line) =>
+                    line.contains(completedAt) &&
+                    !line.every(
+                      (node) =>
+                          before.board.pieceAt(node)?.owner ==
+                          before.currentPlayer,
+                    ) &&
+                    line.every(
+                      (node) =>
+                          after.board.pieceAt(node)?.owner ==
+                          before.currentPlayer,
+                    ),
+              )
+              .toList();
+    return _BoardEffect(
+      millLines: millEffectLines,
+      cardNodes: _cardEffectNodesFor(action),
+      cardColor: _cardEffectColorFor(action),
+    );
+  }
+
+  NodeID? _completedNodeFor(GameAction action) {
+    return switch (action) {
+      PlacePieceAction(:final to) => to,
+      MovePieceAction(:final to) => to,
+      UseCardAction(card: AbilityCardID.jump, target: JumpTarget(:final to)) =>
+        to,
+      _ => null,
+    };
+  }
+
+  Set<NodeID> _cardEffectNodesFor(GameAction action) {
+    return switch (action) {
+      UseCardAction(
+        card: AbilityCardID.freeze,
+        target: PieceTarget(:final node),
+      ) =>
+        {node},
+      UseCardAction(
+        card: AbilityCardID.block,
+        target: NodeTarget(:final node),
+      ) =>
+        {node},
+      UseCardAction(
+        card: AbilityCardID.jump,
+        target: JumpTarget(:final from, :final to),
+      ) =>
+        {from, to},
+      _ => const {},
+    };
+  }
+
+  Color? _cardEffectColorFor(GameAction action) {
+    return switch (action) {
+      UseCardAction(card: AbilityCardID.freeze) => const Color(0xff39a9ff),
+      UseCardAction(card: AbilityCardID.block) => const Color(0xffdf3f3f),
+      UseCardAction(card: AbilityCardID.jump) => const Color(0xff35b86b),
+      _ => null,
+    };
   }
 
   bool _isLegal(GameAction action) {
@@ -484,10 +599,7 @@ class _GameScreenState extends State<GameScreen> {
     }
     final strategy = CpuStrategyFactory.create(widget.config.cpuDifficulty);
     final action = strategy.selectAction(state: _state, engine: _engine);
-    setState(() {
-      _state = _engine.apply(action: action, state: _state);
-    });
-    _afterStateChanged();
+    _commitAction(action, showHumanCaptureTargets: false);
   }
 
   String _instruction() {
@@ -557,6 +669,20 @@ class _BoardSurface extends StatelessWidget {
       ),
     );
   }
+}
+
+class _BoardEffect {
+  final List<List<NodeID>> millLines;
+  final Set<NodeID> cardNodes;
+  final Color? cardColor;
+
+  const _BoardEffect({
+    required this.millLines,
+    required this.cardNodes,
+    required this.cardColor,
+  });
+
+  bool get isEmpty => millLines.isEmpty && cardNodes.isEmpty;
 }
 
 class _TurnControls extends StatelessWidget {

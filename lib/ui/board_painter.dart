@@ -18,6 +18,14 @@ class BoardPainter extends CustomPainter {
   final NodeID? hoveredNode;
   // ブロックカードで一時的に使えないノード。
   final Map<NodeID, int> blockedNodes;
+  // ミル成立直後に光らせる3点ライン。複数ミル同時成立にも対応する。
+  final List<List<NodeID>> millEffectLines;
+  // カード使用直後に反応させる対象ノード。
+  final Set<NodeID> cardEffectNodes;
+  // カードごとに異なるパルス色。演出がないときはnullにする。
+  final Color? cardEffectColor;
+  // 0.0から1.0へ進む短い演出の進行度。
+  final double effectProgress;
 
   const BoardPainter({
     required this.board,
@@ -25,6 +33,10 @@ class BoardPainter extends CustomPainter {
     required this.selectedNode,
     required this.hoveredNode,
     required this.blockedNodes,
+    this.millEffectLines = const [],
+    this.cardEffectNodes = const {},
+    this.cardEffectColor,
+    this.effectProgress = 1,
   });
 
   static Offset pointFor(NodeID node, Size size) {
@@ -62,6 +74,7 @@ class BoardPainter extends CustomPainter {
     for (final edge in _uniqueEdges()) {
       canvas.drawLine(pointFor(edge.$1, size), pointFor(edge.$2, size), line);
     }
+    _drawMillEffects(canvas, size);
 
     for (final node in NodeID.values) {
       final center = pointFor(node, size);
@@ -93,12 +106,13 @@ class BoardPainter extends CustomPainter {
       if (blocked) {
         canvas.drawCircle(
           center,
-          16,
+          18,
           Paint()
-            ..color = const Color(0xffa23b3b)
+            ..color = const Color(0xff9f2525)
             ..style = PaintingStyle.stroke
             ..strokeWidth = 3,
         );
+        _drawNoEntryMark(canvas, center, 12, filled: true);
       }
       final piece = board.pieceAt(node);
       if (piece != null) {
@@ -128,7 +142,11 @@ class BoardPainter extends CustomPainter {
               ..style = PaintingStyle.stroke
               ..strokeWidth = 3,
           );
+          _drawNoEntryMark(canvas, center + const Offset(14, -14), 9);
         }
+      }
+      if (cardEffectNodes.contains(node) && cardEffectColor != null) {
+        _drawCardPulse(canvas, center, cardEffectColor!);
       }
     }
   }
@@ -148,6 +166,100 @@ class BoardPainter extends CustomPainter {
         }
       }
     }
+  }
+
+  void _drawMillEffects(Canvas canvas, Size size) {
+    if (millEffectLines.isEmpty) {
+      return;
+    }
+    final pulse = math.sin(effectProgress * math.pi).clamp(0.0, 1.0);
+    final glow = const Color(0xffffd24d).withValues(alpha: 0.25 + pulse * 0.45);
+    final stroke = Paint()
+      ..color = glow
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 10 + pulse * 8;
+    final core = Paint()
+      ..color = const Color(0xfffff0a6).withValues(alpha: 0.65 + pulse * 0.25)
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3 + pulse * 2;
+    for (final line in millEffectLines) {
+      if (line.length < 3) {
+        continue;
+      }
+      final start = pointFor(line.first, size);
+      final end = pointFor(line.last, size);
+      canvas.drawLine(start, end, stroke);
+      canvas.drawLine(start, end, core);
+      for (final node in line) {
+        final center = pointFor(node, size);
+        canvas.drawCircle(
+          center,
+          30 + pulse * 8,
+          Paint()
+            ..color = const Color(0xffffd24d).withValues(alpha: 0.2)
+            ..style = PaintingStyle.fill,
+        );
+        canvas.drawCircle(
+          center,
+          28 + pulse * 7,
+          Paint()
+            ..color = const Color(0xfffff0a6).withValues(alpha: 0.8)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2 + pulse * 2,
+        );
+      }
+    }
+  }
+
+  void _drawCardPulse(Canvas canvas, Offset center, Color color) {
+    final pulse = math.sin(effectProgress * math.pi).clamp(0.0, 1.0);
+    canvas.drawCircle(
+      center,
+      24 + effectProgress * 22,
+      Paint()
+        ..color = color.withValues(alpha: (1 - effectProgress) * 0.35)
+        ..style = PaintingStyle.fill,
+    );
+    canvas.drawCircle(
+      center,
+      28 + pulse * 10,
+      Paint()
+        ..color = color.withValues(alpha: 0.45 + pulse * 0.35)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3 + pulse * 2,
+    );
+  }
+
+  void _drawNoEntryMark(
+    Canvas canvas,
+    Offset center,
+    double radius, {
+    bool filled = false,
+  }) {
+    final red = Paint()
+      ..color = const Color(0xffc62828).withValues(alpha: filled ? 0.86 : 0.95)
+      ..style = filled ? PaintingStyle.fill : PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    final slash = Paint()
+      ..color = Colors.white
+      ..strokeCap = StrokeCap.round
+      ..strokeWidth = 3;
+    canvas.drawCircle(center, radius, red);
+    if (filled) {
+      canvas.drawCircle(
+        center,
+        radius,
+        Paint()
+          ..color = const Color(0xff7f1515)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+    canvas.drawLine(
+      center + Offset(-radius * 0.55, radius * 0.55),
+      center + Offset(radius * 0.55, -radius * 0.55),
+      slash,
+    );
   }
 }
 

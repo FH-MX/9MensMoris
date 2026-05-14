@@ -243,14 +243,16 @@ class GameEngine {
         next = next.copyWith(
           board: next.board.updatePiece(
             target.node,
-            piece.copyWith(frozenTurns: 1),
+            // カード使用者の通常行動終了時にも1回tickされるため、相手ターンまで残すには2から始める。
+            piece.copyWith(frozenTurns: 2),
           ),
         );
         return next.copyWith(turnPhase: TurnPhase.selectingAction);
       case AbilityCardID.block:
         final target = action.target as NodeTarget;
         next = next.copyWith(
-          blockedNodes: {...next.blockedNodes, target.node: 1},
+          // フリーズと同じく、使用者のターン終了では消さず相手の1ターン中だけ封鎖する。
+          blockedNodes: {...next.blockedNodes, target.node: 2},
         );
         return next.copyWith(turnPhase: TurnPhase.selectingAction);
       case AbilityCardID.jump:
