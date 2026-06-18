@@ -5,8 +5,8 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <!-- ↓ descriptionを具体的に書き直す -->
-  <meta name="description" content="9 Men's Morris（ナインメンズモリス）をFlutterで実装したWebゲームです。2人対戦またはCPU対戦で遊べます。">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="ナインメンズモリス（9 Men's Morris）を無料で遊べるオンライン版。ブラウザでCPU対戦・2人対戦ができます。完全ルール・歴史・勝つための戦略・用語集・よくある質問まで日本語で詳しく解説。">
 
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -14,8 +14,7 @@
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <!-- ↓ titleも変更 -->
-  <title>9 Men's Morris - 無料ボードゲーム</title>
+  <title>ナインメンズモリス オンライン｜無料で遊べる古典ボードゲーム（ルール・戦略解説つき）</title>
   <link rel="manifest" href="manifest.json">
 
   <script
@@ -25,132 +24,292 @@
   </script>
 
   <style>
+    :root {
+      --bg: #faf7f2;
+      --text: #2f2a22;
+      --muted: #6b6356;
+      --accent: #6c5135;
+      --line: #e3dccd;
+      --card: #fffdf8;
+    }
+    * { box-sizing: border-box; }
     body {
       margin: 0;
-      background: #faf7f2;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans JP", sans-serif;
+      line-height: 1.85;
+    }
+    .wrap { max-width: 860px; margin: 0 auto; padding: 0 20px; }
+
+    header.site {
+      padding: 20px 0 12px;
+      border-bottom: 1px solid var(--line);
+    }
+    header.site h1 { font-size: 1.5rem; margin: 0 0 6px; }
+    header.site p { margin: 0; color: var(--muted); font-size: 0.95rem; }
+    nav.toc { margin-top: 12px; font-size: 0.9rem; }
+    nav.toc a { color: var(--accent); margin-right: 14px; white-space: nowrap; }
+
+    /* ゲーム本体。Flutter はこの #game-host の中だけに描画される。 */
+    #game-host {
+      position: relative;
+      width: 100%;
+      max-width: 760px;
+      height: 760px;
+      margin: 20px auto;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      overflow: hidden;
+      background: var(--bg);
+    }
+    @media (max-width: 800px) {
+      #game-host { height: 620px; }
     }
 
     #app-loading {
-      position: fixed;
+      position: absolute;
       inset: 0;
-      z-index: 9999;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 24px;
-      background: #faf7f2;
-      color: #2f2a22;
-      font-family: sans-serif;
       text-align: center;
+      color: var(--text);
     }
+    #app-loading strong { display: block; margin-bottom: 8px; font-size: 1.2rem; }
 
-    #app-loading strong {
-      display: block;
-      margin-bottom: 8px;
-      font-size: 1.25rem;
-    }
-
-    #game-info {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 12px 16px;
-      font-family: sans-serif;
-    }
-    #game-info h1 { font-size: 1.4rem; margin-bottom: 8px; }
-    #game-info p  { font-size: 0.95rem; line-height: 1.6; }
-
-    #top-ad {
-      width: 100%;
+    .ad-slot {
+      max-width: 760px;
+      margin: 8px auto 24px;
       min-height: 90px;
       display: flex;
       align-items: center;
       justify-content: center;
-      background: #faf7f2;
     }
 
-    #legal-links {
-      position: fixed;
-      right: 12px;
-      bottom: 12px;
-      z-index: 1000;
-      padding: 8px 10px;
-      border-radius: 6px;
-      background: rgba(250, 247, 242, 0.94);
-      font-family: sans-serif;
-      font-size: 0.8rem;
-      box-shadow: 0 2px 8px rgba(47, 42, 34, 0.16);
+    article h2 {
+      font-size: 1.25rem;
+      margin-top: 36px;
+      padding-bottom: 6px;
+      border-bottom: 2px solid var(--line);
     }
+    article h3 { font-size: 1.05rem; margin-top: 24px; }
+    article p, article li { font-size: 1rem; }
+    article ol, article ul { padding-left: 1.4em; }
+    dl.glossary dt { font-weight: 700; margin-top: 12px; }
+    dl.glossary dd { margin: 4px 0 0; }
+    details.faq {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--card);
+      padding: 10px 14px;
+      margin: 10px 0;
+    }
+    details.faq summary { font-weight: 700; cursor: pointer; }
+    details.faq p { margin: 8px 0 0; }
 
-    #legal-links a {
-      color: #2f2a22;
-      text-decoration: underline;
+    footer.site {
+      margin-top: 48px;
+      padding: 24px 0 48px;
+      border-top: 1px solid var(--line);
+      color: var(--muted);
+      font-size: 0.9rem;
     }
+    footer.site a { color: var(--accent); }
   </style>
-
-  <noscript>
-    <style>
-      #app-loading {
-        display: none;
-      }
-    </style>
-  </noscript>
 </head>
 <body>
-  <!-- ゲーム画面の上に表示するAdSenseバナー広告エリアです。 -->
-  <div id="top-ad">
-    <!-- AdSenseのバナー広告枠です。 -->
-    <!-- Flutterアプリの初期化前にHTMLとして配置して、Googleが広告枠を検出できるようにします。 -->
-    <ins class="adsbygoogle"
-         style="display:block;width:100%;max-width:970px"
-         data-ad-client="ca-pub-6888437414541905"
-         data-ad-slot="4868142895"
-         data-ad-format="auto"
-         data-full-width-responsive="true"></ins>
-  </div>
+  <div class="wrap">
+    <header class="site">
+      <h1>ナインメンズモリス オンライン</h1>
+      <p>古代から遊ばれてきた2人用ボードゲーム「9 Men's Morris」を、ブラウザで無料で遊べます。CPU対戦・2人対戦に対応。</p>
+      <nav class="toc" aria-label="目次">
+        <a href="#play">遊ぶ</a>
+        <a href="#about">概要</a>
+        <a href="#rules">ルール</a>
+        <a href="#strategy">戦略</a>
+        <a href="#history">歴史</a>
+        <a href="#glossary">用語集</a>
+        <a href="#faq">FAQ</a>
+      </nav>
+    </header>
 
-  <!-- 上で配置したAdSense広告枠を初期化します。 -->
-  <script>
-    (adsbygoogle = window.adsbygoogle || []).push({});
-  </script>
+    <h2 id="play" style="font-size:1.25rem;margin-top:24px;">オンラインで遊ぶ</h2>
+    <p>下のボードでそのままプレイできます。コマを置く・動かす操作はクリック（タップ）だけ。インストール不要です。</p>
 
-  <!-- ゲーム中でも確認できる法務リンクです。 -->
-  <!-- AdSenseやユーザー向けに、プライバシーポリシーへ常に到達できる状態を保ちます。 -->
-  <nav id="legal-links" aria-label="法務リンク">
-    <a href="https://fh-mx.github.io/privacy.html">
-      プライバシーポリシー
-    </a>
-  </nav>
-
-  <div id="app-loading">
-    <div>
-      <strong>9 Men's Morris</strong>
-      <span>ゲームを読み込んでいます...</span>
+    <!-- Flutter ゲームの描画先。flutter_bootstrap.js が hostElement としてこの要素を使う。 -->
+    <div id="game-host">
+      <div id="app-loading">
+        <div>
+          <strong>9 Men's Morris</strong>
+          <span>ゲームを読み込んでいます…</span>
+        </div>
+      </div>
     </div>
-  </div>
 
-  <!-- ↓ Googleが読めるコンテンツをここに追加 -->
-  <div id="game-info">
-    <h1>9 Men's Morris（ナインメンズモリス）</h1>
-    <p>
-      ヨーロッパ発祥の古典ボードゲームをFlutterで実装しました。
-      盤上に駒を配置し、縦・横に3つ並べると相手の駒を取れます。
-      相手の駒を2個以下にするか、動けなくすれば勝利です。
-    </p>
-    <p>
-      Phase 1（配置）→ Phase 2（移動）→ Phase 3（飛び移り）の
-      3フェーズで進行する本格ルール対応です。
-    </p>
-    <p>
-      <a href="https://fh-mx.github.io/privacy.html">
-        プライバシーポリシー
-      </a>
-    </p>
+    <!-- コンテンツに挟まれた位置の AdSense 広告枠（ページ全体で1枠）。 -->
+    <div class="ad-slot">
+      <ins class="adsbygoogle"
+           style="display:block;width:100%;max-width:760px"
+           data-ad-client="ca-pub-6888437414541905"
+           data-ad-slot="4868142895"
+           data-ad-format="auto"
+           data-full-width-responsive="true"></ins>
+    </div>
+    <script>
+      (adsbygoogle = window.adsbygoogle || []).push({});
+    </script>
+
+    <article>
+      <h2 id="about">ナインメンズモリスとは</h2>
+      <p>
+        ナインメンズモリス（Nine Men's Morris）は、2人のプレイヤーがそれぞれ9個のコマを使って争う、
+        古典的なアブストラクト戦略ゲームです。日本語では「ナインメンズモリス」「メレル」「ミル」などと
+        呼ばれることもあります。盤の上の線が交わる24個の点（交点）にコマを置き、自分のコマを縦か横に
+        3つ並べる「ミル」を作ることを目指します。運の要素がなく、両者に同じ条件が与えられる
+        完全情報ゲームであるため、囲碁・チェッカー・オセロなどと同じく、思考力と読み合いが
+        そのまま勝敗に表れるのが魅力です。
+      </p>
+      <p>
+        ルールはシンプルで覚えやすい一方、ミルを作る・崩す・また作り直すといった攻防や、
+        相手の動きを封じる手筋など、奥の深い駆け引きが生まれます。短時間で1局が終わるため、
+        ちょっとした空き時間に頭の体操として楽しむのにも向いています。当サイトでは、ルールを
+        知らない人でも下のゲームをそのまま触りながら覚えられるように作っています。
+      </p>
+
+      <h2 id="rules">ルール（完全版）</h2>
+      <h3>盤面とコマ</h3>
+      <p>
+        盤面は、入れ子になった3つの正方形と、それらを結ぶ線で構成されます。線が交わる点は全部で24か所あり、
+        コマはこの交点の上に置きます（マスの中ではありません）。各プレイヤーは自分の色のコマを9個持ち、
+        交互に手を進めます。隣接しているかどうかは盤面の線でつながっているかで決まり、
+        斜めの移動はありません。
+      </p>
+
+      <h3>ゲームの3つのフェーズ</h3>
+      <ol>
+        <li>
+          <strong>配置フェーズ：</strong>
+          盤が空の状態から、2人が交互に空いている交点へ自分のコマを1つずつ置いていきます。
+          手持ちの9個をすべて置き終えると次のフェーズへ移ります。
+        </li>
+        <li>
+          <strong>移動フェーズ：</strong>
+          すべてのコマを置き終えたら、自分のコマを線でつながった隣の空き点へ1マスずつ動かします。
+        </li>
+        <li>
+          <strong>フライング（飛び）フェーズ：</strong>
+          盤上のコマが3個になったプレイヤーは、隣接に関係なく、盤上の空いている任意の点へ
+          自由にコマを動かせるようになります。これを「飛び」と呼びます。当サイトではこのルールを
+          標準で有効にしています。
+        </li>
+      </ol>
+
+      <h3>ミルと相手のコマを取る</h3>
+      <p>
+        自分のコマを盤面の1本の線上に3つ並べると「ミル」が成立します。ミルを作ったプレイヤーは、
+        相手のコマを1つ盤上から取り除くことができます。取り除く相手のコマは、原則として相手の
+        ミルを構成していないコマから選びます（相手のコマがすべてミルに含まれている場合は、その限りでは
+        ありません）。一度作ったミルをいったん崩し、再び元に戻すと、その都度あらたにミルが成立した
+        ものとして扱われ、また相手のコマを取れます。この「ミルの開閉」を繰り返すのが基本的な攻め筋です。
+      </p>
+
+      <h3>勝敗条件</h3>
+      <p>
+        次のいずれかを満たすと勝ちです。
+      </p>
+      <ul>
+        <li>相手のコマを2個以下にしたとき（ミルを作れなくなるため）。</li>
+        <li>相手が合法手を1つも指せなくなったとき（動かせるコマがない）。</li>
+      </ul>
+
+      <h2 id="strategy">勝つための戦略・コツ</h2>
+      <h3>配置フェーズで差がつく</h3>
+      <p>
+        勝負の多くは最初の配置フェーズで決まります。盤面の中で多くの線が交わる点（交点の数が多い場所）は、
+        ミルを作る方向も、コマを動かす先も多くなるため価値が高い場所です。こうした要所を早めに
+        押さえておくと、後半の移動フェーズで主導権を握りやすくなります。
+      </p>
+      <h3>ダブルミルを狙う</h3>
+      <p>
+        上級者がまず狙うのが「ダブルミル（揺れ動くミル）」です。1つのコマを行き来させるだけで、
+        2つのミルを交互に開いたり閉じたりできる形を作ると、自分の手番のたびに相手のコマを
+        取り続けられます。これが決まると一気に有利になるため、作ることと、作らせないことの
+        両方を意識しましょう。
+      </p>
+      <h3>守りも攻めの一部</h3>
+      <p>
+        相手が「あと1つでミル」という形を作ったら、その完成点に先に自分のコマを置くか、
+        構成コマを動かして崩します。攻めてミルを作ることばかりでなく、相手のミルを未然に防ぐ守りが、
+        結果的にコマ差を守ることにつながります。終盤、相手のコマが少なくなったら、相手の動ける
+        マスを減らして「指す手がない」状態に追い込む勝ち方も覚えておくとよいでしょう。
+      </p>
+
+      <h2 id="history">歴史</h2>
+      <p>
+        ナインメンズモリスは非常に古くから世界各地で遊ばれてきたゲームとして知られ、
+        その盤の図形は古代の遺跡や建造物の床・石などにも刻まれていたと言われています。
+        中世のヨーロッパでは広く親しまれ、シェイクスピアの戯曲の中にこのゲームを指すとされる
+        記述が登場することでも知られています。盤の形やコマの数が少しずつ異なる多くの仲間（変種）が
+        各地に存在し、コマが少ない簡易版から、コマや線を増やした拡張版まで幅広く遊ばれてきました。
+      </p>
+      <p>
+        ※ 起源の年代や伝来の経路については諸説あり、確定していない点も多くあります。ここでは
+        広く知られている範囲にとどめて紹介しています。正確な歴史を調べたい場合は、
+        「Nine Men's Morris history」「merels 起源」などのキーワードで一次資料を確認してください。
+      </p>
+
+      <h2 id="glossary">用語集</h2>
+      <dl class="glossary">
+        <dt>ミル（Mill）</dt>
+        <dd>自分のコマを1本の線上に3つ並べた状態。成立すると相手のコマを1つ取れる。</dd>
+        <dt>交点</dt>
+        <dd>盤面の線が交わる点。コマはここに置く。全部で24か所ある。</dd>
+        <dt>配置フェーズ</dt>
+        <dd>手持ちのコマを交互に盤へ置いていく最初の段階。</dd>
+        <dt>移動フェーズ</dt>
+        <dd>すべてのコマを置いたあと、隣の空き点へ1マスずつ動かす段階。</dd>
+        <dt>フライング（飛び）</dt>
+        <dd>コマが3個になったプレイヤーが、任意の空き点へ自由に動かせるようになるルール。</dd>
+        <dt>ダブルミル</dt>
+        <dd>コマを1つ往復させるだけで2つのミルを交互に開閉できる、非常に強力な形。</dd>
+      </dl>
+
+      <h2 id="faq">よくある質問（FAQ）</h2>
+      <details class="faq">
+        <summary>無料で遊べますか？インストールは必要ですか？</summary>
+        <p>はい、完全に無料です。ブラウザだけで動くため、アプリのインストールは不要です。</p>
+      </details>
+      <details class="faq">
+        <summary>1人でも遊べますか？</summary>
+        <p>はい。CPU（コンピュータ）との対戦に対応しているので、1人でも遊べます。難易度を選んで挑戦できます。</p>
+      </details>
+      <details class="faq">
+        <summary>斜めにコマを動かせますか？</summary>
+        <p>いいえ。コマは盤面の線でつながった隣の点へしか動けません。斜めの移動はありません。</p>
+      </details>
+      <details class="faq">
+        <summary>「飛び」ルールは必ず使うのですか？</summary>
+        <p>当サイトでは、コマが3個になったプレイヤーが任意の点へ動かせる「飛び」を標準で有効にしています。</p>
+      </details>
+      <details class="faq">
+        <summary>どうなったら勝ちですか？</summary>
+        <p>相手のコマを2個以下にするか、相手が動かせる手をなくしたときに勝ちです。</p>
+      </details>
+    </article>
+
+    <footer class="site">
+      <p>
+        <a href="privacy.html">プライバシーポリシー</a>
+      </p>
+      <p>本サイトはナインメンズモリスを学び・楽しむための個人運営の非公式ファンサイトです。</p>
+    </footer>
   </div>
-  <!-- ↑ ここまでがGoogleに見えるコンテンツ -->
 
   <script>
+    // ゲームの最初のフレームが描画されたら、#game-host 内のローディング表示を消す。
     window.addEventListener('flutter-first-frame', function () {
-      const loading = document.getElementById('app-loading');
+      var loading = document.getElementById('app-loading');
       if (loading) {
         loading.remove();
       }
